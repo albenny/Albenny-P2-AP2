@@ -1,0 +1,139 @@
+﻿@page "/CClientes"
+
+@using Albenny_P2_AP2.BLL;
+@using Albenny_P2_AP2.Models;
+@inject IToastService toast
+<div class="card-img">
+    <div class="card-header">
+        <h1>Consulta de  Clientes </h1>
+    </div>
+
+    <div class="card-body">
+        <form>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Filtrar por Fecha</label>
+                    <select class="form-control" @bind="FiltroFecha">
+                        <option value="0">Todo</option>
+                        <option value="1">Fecha</option>
+                    </select>
+                </div>
+                &nbsp;
+                <div class="form-group">
+                    <label>Desde</label>
+                    <input type="date" @bind="Desde" class="form-control" />
+                </div>
+                &nbsp;
+                <div class="form-group">
+                    <label>Hasta</label>
+                    <input type="date" @bind="Hasta" class="form-control" />
+                </div>
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                <div class="form-group">
+                    <label>Filtro</label>
+                    <select class="form-control" @bind="Filtro">
+                        <option value="0">Todo</option>
+                        <option value="1">Cliente id</option>
+                    </select>
+                </div>
+                &nbsp;
+                <div class="form-group">
+                    <label>Criterio</label>
+                    <div class="input-group">
+                        <input type="text" @bind="Criterio" class="form-control">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary input-group-text" @onclick="@(u => Consultar())"> <i class="oi oi-magnifying-glass" /> Consultar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive text-nowrap" style="position: relative; height:200px; overflow: auto; display: block;">
+                <table class="table table-striped">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Cliente Id</th>
+
+                            <th>Nombres</th>
+
+
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        @foreach (var item in ClienteList)
+                        {
+            <tr>
+                <td>@item.ClienteId</td>
+
+                <td>@item.Nombres</td>
+
+
+
+
+            </tr>}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+@code { public List<Clientes> ClienteList { get; set; }
+
+            private DateTime Desde { get; set; } = DateTime.Now;
+            private DateTime Hasta { get; set; } = DateTime.Now;
+
+            public string Filtro { get; set; }
+            private string FiltroFecha { get; set; }
+
+            public string Criterio { get; set; }
+
+            protected override void OnInitialized()
+            {
+                Nuevo();
+            }
+
+            private void Nuevo()
+            {
+                ClienteList = new List<Clientes>();
+                Filtro = "0";
+                Criterio = string.Empty;
+            }
+
+            public void Consultar()
+            {
+                int id;
+                int.TryParse(Criterio, out id);
+                switch (Filtro)
+                {
+                    case "0": //Todo
+                        ClienteList = ClientesBLL.GetList(c => true);
+                        break;
+                    case "1":
+                        if (Criterio.Trim().Length > 0)
+                        {
+                            try
+                            {
+                                ClienteList = ClientesBLL.GetList(c => c.ClienteId == id);
+                            }
+                            catch (FormatException)
+                            {
+                                toast.ShowWarning("Ingrese un numero");
+                            }
+                        }
+                        else
+                        {
+                            ClienteList = ClientesBLL.GetList(c => true).OrderBy(c => c.ClienteId).ToList();
+                        }
+                        break;
+                }
+
+
+            } }
+}

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Albenny_P2_AP2.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20210701005714_migracion_inicial")]
+    [Migration("20210701013553_migracion_inicial")]
     partial class migracion_inicial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
