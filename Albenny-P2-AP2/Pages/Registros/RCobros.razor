@@ -1,5 +1,7 @@
 ﻿@page "/Cobros"
 @page "/Cobros/{cobroId:int}"
+@using Albenny_P2_AP2.Models;
+@using Albenny_P2_AP2.BLL; 
 
 @inject IToastService Toast
 
@@ -15,7 +17,6 @@
             <div class="card-body">
                 <form>
 
-                   
 
                     <div class="form-group form-inline">
                         <div class="form-group col-6">
@@ -118,3 +119,111 @@
         </div>
     </div>
 </EditForm>
+
+@code {
+    Cobros cobro = new Cobros();
+
+    List<Clientes> ClienteList = new List<Clientes>();
+
+    [Parameter]
+    public int cobroId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Nuevo();
+        await BuscarParametro();
+    }
+
+    private async Task BuscarParametro()
+    {
+        if (cobroId > 0)
+        {
+            var Cobro = CobrosBLL.Buscar(cobroId);
+
+            if (Cobro != null)
+            {
+                Cobro.Detalle = await VentasBLL.GetVentasCobradas(Cobro.ClienteId);
+                this.cobro = Cobro;
+            }
+            else
+                Toast.ShowError("El cobro no existe");
+        }
+    }
+
+    private void Nuevo()
+    {
+        cobro = new Cobros();
+        ClienteList = ClientesBLL.GetList(c => true);
+        cobro.Fecha = DateTime.Now;
+    }
+
+    private void Guardar()
+    {
+        bool guardado;
+        if (cobro.CobroId == 0)
+        {
+            cobro.Detalle.RemoveAll(d => d.Cobrado == 0);
+
+            guardado = CobrosBLL.Guardar(cobro);
+
+            if (guardado)
+            {
+                Toast.ShowSuccess("Guardado correctamente");
+                Nuevo();
+            }
+            else
+                Toast.ShowError("No se pudo guardar correctamente");
+        }
+        else
+            Toast.ShowWarning("No puede modificar el cobro");
+
+    }
+
+    private async Task Buscar()
+    {
+        var Cobro = CobrosBLL.Buscar(cobro.CobroId);
+
+        if (Cobro != null)
+        {
+            Cobro.Detalle = await VentasBLL.GetVentasCobradas(Cobro.ClienteId);
+            this.cobro = Cobro;
+        }
+        else
+            Toast.ShowError("El cobro no existe");
+    }
+
+    private void Eliminar()
+    {
+        bool elimino;
+
+        elimino = CobrosBLL.Eliminar(cobro.CobroId);
+
+        if (elimino)
+        {
+            Nuevo();
+            Toast.ShowSuccess("Eliminado correctamente");
+        }
+        else
+            Toast.ShowError("No fue posible eliminar");
+    }
+
+    private void Cobrar(CobrosDetalle cobroDetalle)
+    {
+        if (cobroDetalle.Cobrado == 0)
+        {
+            cobroDetalle.Cobrado = cobroDetalle.Venta.Balance;
+            cobro.TotalCobrado += cobroDetalle.Cobrado;
+        }
+        else
+        {
+            cobroDetalle.Cobrado = 0;
+            cobro.TotalCobrado -= cobroDetalle.Venta.Balance;
+        }
+    }
+
+    private async Task ObtenerVentasPendientes()
+    {
+        if (cobro.CobroId == 0)
+            cobro.Detalle = await VentasBLL.GetVentasPendiente(cobro.ClienteId);
+    }
+}
